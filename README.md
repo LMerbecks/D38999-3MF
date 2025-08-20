@@ -1,5 +1,5 @@
 # D38999-3MF
-In this repository we develop a MIL-DTL-38999 connector (system) that can be 3D-printed.
+In this repository we develop a MIL-DTL-38999 connector (system) that can be 3D-printed. It was inspired by [this thing](https://www.thingiverse.com/thing:3129731) by [fdavies](https://www.thingiverse.com/fdavies/designs)
 
 ## Introduction
 
