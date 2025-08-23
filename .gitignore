@@ -41,3 +41,4 @@ fp-info-cache
 
 # FreeCAD 
 **/*.FCBak
+**/*.3mf
