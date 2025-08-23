@@ -40,4 +40,4 @@ fp-info-cache
 *.kicad_prl
 
 # FreeCAD 
-**/*.FRBak
+**/*.FCBak
