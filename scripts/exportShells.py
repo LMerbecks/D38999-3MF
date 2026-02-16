@@ -15,7 +15,20 @@ class ShellConfig:
     keying_options: list[str]
     
 SHELL_SIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
+INSERT_TEMPLATES = {
+    'A': "9-1{gender}", 
+    'B': "11-4{gender}",
+    'C': "13-8{gender}", 
+    'D': "15-12{gender}",
+    'E': "17-18{gender}",
+    'F': "19-26{gender}",
+    'G': None,
+    'H': None,
+    'J': None
+}
 KEYING_OPTIONS = ['N', 'A', 'B', 'C', 'D', 'E']
+
+
 
 plug_config = ShellConfig(file="../models/D38999-26AXXXXX.FCStd",
                          document_name="D38999_26AXXXXX",
@@ -35,13 +48,20 @@ receptacle_config = ShellConfig(file = "../models/D38999-20AXXXXX.FCStd",
                                shell_sizes=SHELL_SIZES,
                                keying_options=KEYING_OPTIONS)
 
+INSERT_DOCUMENTS = {
+    'P': receptacle_config.document_name,
+    'S': plug_config.document_name
+}
 
+INSERT_FILES = {
+    'P': receptacle_config.file,
+    'S': plug_config.file
+}
 
 
 def export_shells(config: ShellConfig)->None:
 
-    FreeCAD.openDocument(config.file)
-    shell_document = FreeCAD.getDocument(config.document_name)
+    shell_document = FreeCAD.openDocument(config.file)
     
     for shell_size in config.shell_sizes:
         print(f'Exporting {config.document_name} shells with size {shell_size}...')
@@ -93,8 +113,8 @@ def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:s
     shell_document.recompute()
 
     objects = gather_bodies(shell_document, config.body_labels)
-    
-    export_bodies(objects, output_directory, config.output_file_template, keying, shell_size)
+    export_path = output_directory + "/" + config.output_file_template.format(size=shell_size, keying=keying) + '.3mf'
+    export_bodies(objects, export_path)
 
 
 def set_shell_options(shell_part, keying, shell_size):
@@ -149,21 +169,55 @@ def gather_bodies(shell_document, body_labels: list[str])->list:
     return objects
 
 
-def export_bodies(objects, output_dir:str, file_template:str, keying:str, shell_size:str)->None:
-    export_path = output_dir + "/" + file_template.format(size=shell_size, keying=keying) + '.3mf'
+def export_bodies(objects, export_path:str)->None:
     if hasattr(Mesh, "exportOptions"):
         options = Mesh.exportOptions(export_path)
         Mesh.export(objects, export_path, options)
     else:
         Mesh.export(objects, export_path)
 
+def export_inserts(file_paths:str, output_root:str):
 
-print("Exporting plugs...")
+    genders = ['P', 'S']
+    
+    for gender in genders:
+        file = file_paths[gender]
+        insert_doc = FreeCAD.openDocument(file)
+        output_dir = output_root + '/' + gender 
+        if not os.path.exists(output_dir): 
+            os.makedirs(output_dir)
+        for shell in SHELL_SIZES:
+            current_template = INSERT_TEMPLATES[shell]
+            if current_template is None:
+                continue
+            export_insert(gender, insert_doc, output_dir, current_template)
+
+def export_insert(gender, insert_doc, output_dir, current_template):
+    insert_label = current_template.format(gender=gender) + "_insert"
+    insert_candidates = insert_doc.getObjectsByLabel(insert_label)
+    if len(insert_candidates) > 1: 
+        raise ValueError(f'Multiple objects with label: {insert_label}')
+    if len(insert_candidates) < 1:
+        raise ValueError(f'No object with label: {insert_label}')
+    insert_body = insert_candidates[0]
+    bodies = [insert_body]
+    export_path = output_dir + '/' + current_template.format(gender=gender) + '.3mf'
+    export_bodies(bodies, export_path)
+
+        
+
+print('Exporting inserts...')
+start = time.time()
+export_inserts(INSERT_FILES, '../output/inserts')
+end = time.time()
+print(f'\nDone. Took {end-start:.3f}s')
+
+print("Exporting plugs. This may take a while...")
 start = time.time()
 export_shells(plug_config)
 end = time.time()
 print(f'\nDone. Took {end-start:.3f}s')
-print("\nExporting receptacles...")
+print("\nExporting receptacles. This may take a while...")
 start = time.time()
 export_shells(receptacle_config)
 end = time.time()
