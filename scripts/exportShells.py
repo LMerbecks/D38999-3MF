@@ -40,11 +40,11 @@ receptacle_config = ShellConfig(file = "../models/D38999-20AXXXXX.FCStd",
 
 def export_shells(config: ShellConfig)->None:
 
-    FreeCAD.openDocument(config.shell_file)
-    shell_document = FreeCAD.getDocument(config.shell_document_name)
+    FreeCAD.openDocument(config.file)
+    shell_document = FreeCAD.getDocument(config.document_name)
     
     for shell_size in config.shell_sizes:
-        print(f'Exporting {config.shell_document_name} shells with size {shell_size}...')
+        print(f'Exporting {config.document_name} shells with size {shell_size}...')
         start_time = time.time()
         current_output_directory = setup_output_directory(config.output_path_root, shell_size)
         for keying in config.keying_options:
@@ -86,6 +86,8 @@ def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:s
     shell_part = shell_document.getObjectsByLabel(config.part_label)
     if len(shell_part) > 1:
         raise ValueError(f"Multiple parts with label: {config.part_label}")
+    if len(shell_part) < 1:
+        raise ValueError(f"No object with label: {config.part_label}")
     shell_part = shell_part[0]
     set_shell_options(shell_part, keying, shell_size)
     shell_document.recompute()
@@ -148,7 +150,7 @@ def gather_bodies(shell_document, body_labels: list[str])->list:
 
 
 def export_bodies(objects, output_dir:str, file_template:str, keying:str, shell_size:str)->None:
-    export_path = output_dir + file_template.format(size=shell_size, keying=keying) + '.3mf'
+    export_path = output_dir + "/" + file_template.format(size=shell_size, keying=keying) + '.3mf'
     if hasattr(Mesh, "exportOptions"):
         options = Mesh.exportOptions(export_path)
         Mesh.export(objects, export_path, options)
@@ -156,5 +158,14 @@ def export_bodies(objects, output_dir:str, file_template:str, keying:str, shell_
         Mesh.export(objects, export_path)
 
 
+print("Exporting plugs...")
+start = time.time()
 export_shells(plug_config)
+end = time.time()
+print(f'\nDone. Took {end-start:.3f}s')
+print("\nExporting receptacles...")
+start = time.time()
+export_shells(receptacle_config)
+end = time.time()
+print(f'\nDone. Took {end-start:.3f}s')
 
