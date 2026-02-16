@@ -1,18 +1,111 @@
 import Mesh
 import os
 import time
-PLUG_FILE = "../models/D38999-26AXXXX.FCStd"
-DOCUMENT_NAME = "D38999_26AXXXX"
-OUTPUT_PATH = u"../output/plugs"
+from dataclasses import dataclass
 
+@dataclass
+class ShellConfig:
+    file: str
+    document_name: str
+    output_path_root: str
+    output_file_template: str
+    body_labels: list[str]
+    part_label: str
+    shell_sizes: list[str]
+    keying_options: list[str]
+    
 SHELL_SIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
 KEYING_OPTIONS = ['N', 'A', 'B', 'C', 'D', 'E']
 
-FreeCAD.openDocument(PLUG_FILE)
+plug_config = ShellConfig(file="../models/D38999-26AXXXXX.FCStd",
+                         document_name="D38999_26AXXXXX",
+                         output_path_root="../output/plugs",
+                         output_file_template="D38999-26A{size}XXX{keying}",
+                         body_labels=["Core", "Coupling Nut"],
+                         part_label="Plug_Core",
+                         shell_sizes=SHELL_SIZES,
+                         keying_options=KEYING_OPTIONS)
 
-PLUG_DOCUMENT = FreeCAD.getDocument(DOCUMENT_NAME)
+receptacle_config = ShellConfig(file = "../models/D38999-20AXXXXX.FCStd",
+                               document_name = "D38999_20AXXXXX",
+                               output_path_root = "../output/wall_mount_receptacles",
+                               output_file_template="D38999-20A{size}XXX{keying}",
+                               body_labels = ["Core"],
+                               part_label = "Receptacle_Core",
+                               shell_sizes=SHELL_SIZES,
+                               keying_options=KEYING_OPTIONS)
 
-def build_keying_option(keying:str, shell_size:str) -> str:
+
+
+
+def export_shells(config: ShellConfig)->None:
+
+    FreeCAD.openDocument(config.shell_file)
+    shell_document = FreeCAD.getDocument(config.shell_document_name)
+    
+    for shell_size in config.shell_sizes:
+        print(f'Exporting {config.shell_document_name} shells with size {shell_size}...')
+        start_time = time.time()
+        current_output_directory = setup_output_directory(config.output_path_root, shell_size)
+        for keying in config.keying_options:
+            export3mf(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size)
+        end_time = time.time()
+        print(f'\nExported {len(KEYING_OPTIONS)} shells. Took {(end_time-start_time):.3f}s.')
+
+
+def setup_output_directory(output_path_root:str, shell_size:str)->str:
+    """Setup a shell output directory. Generates a folder
+    for the shell size under the root if it does not exist. 
+
+    Args:
+        output_path_root (str): Root for the output directories
+        shell_size (str): size of shell being exported
+
+    Returns:
+        str: path to the created or computed output directory
+    """
+    current_output_directory = output_path_root + f'/shell_size_{shell_size}'
+    if not os.path.exists(current_output_directory):
+        os.makedirs(current_output_directory)
+    return current_output_directory
+
+def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:str, shell_size:str) -> None:
+    """Exports a 3mf file of a plug with the specified shell
+    size and keying.
+
+    Args:
+        output_dir (str): The directory path to write the
+        3mf file to. Without trailing /
+        keying (str): keying option
+        shell_size (str): shell size option
+
+    Raises:
+        ValueError: If keying option is unknown
+        ValueError: If shell size option is unknown
+    """
+    shell_part = shell_document.getObjectsByLabel(config.part_label)
+    if len(shell_part) > 1:
+        raise ValueError(f"Multiple parts with label: {config.part_label}")
+    shell_part = shell_part[0]
+    set_shell_options(shell_part, keying, shell_size)
+    shell_document.recompute()
+
+    objects = gather_bodies(shell_document, config.body_labels)
+    
+    export_bodies(objects, output_directory, config.output_file_template, keying, shell_size)
+
+
+def set_shell_options(shell_part, keying, shell_size):
+    if keying not in KEYING_OPTIONS:
+        raise ValueError(f'Unsupported keying option: {keying}')
+    if shell_size not in SHELL_SIZES:
+        raise ValueError(f'Unsupported shell size: {shell_size}')
+    
+    shell_part.Shell_Size = shell_size
+    shell_part.Keying_Arrangement = build_keying_option_code(keying, shell_size)
+
+
+def build_keying_option_code(keying:str, shell_size:str) -> str:
     """Builds a keying option code from the keying option
     and the shell size by grouping the shell sizes together.
 
@@ -44,56 +137,24 @@ def build_keying_option(keying:str, shell_size:str) -> str:
     return f"{keying}_{shell_groups[shell_size]}"
 
 
-def export3mf(output_dir:str, keying:str, shell_size:str) -> None:
-    """Exports a 3mf file of a plug with the specified shell
-    size and keying.
+def gather_bodies(shell_document, body_labels: list[str])->list:
+    objects = []
+    for label in body_labels:
+        objects_with_label = shell_document.getObjectsByLabel(label)
+        if len(objects_with_label) > 1:
+            raise ValueError(f'More than one object with label: {label}')
+        objects.append(objects_with_label[0])
+    return objects
 
-    Args:
-        output_dir (str): The directory path to write the
-        3mf file to. Without trailing /
-        keying (str): keying option
-        shell_size (str): shell size option
 
-    Raises:
-        ValueError: If keying option is unknown
-        ValueError: If shell size option is unknown
-    """
-    
-    plug_core_part = PLUG_DOCUMENT.getObjectsByLabel('Plug_Core')[0]
-
-    if keying not in KEYING_OPTIONS:
-        raise ValueError(f'Unsupported keying option: {keying}')
-    if shell_size not in SHELL_SIZES:
-        raise ValueError(f'Unsupported shell size: {shell_size}')
-    
-    plug_core_part.Shell_Size = shell_size
-    plug_core_part.Keying_Arrangement = build_keying_option(keying, shell_size)
-
-    PLUG_DOCUMENT.recompute()
-
-    __objs__ = []
-    __objs__.append(PLUG_DOCUMENT.getObjectsByLabel("Core")[0])
-    __objs__.append(PLUG_DOCUMENT.getObjectsByLabel("Coupling Nut")[0])
-    
-    export_path = output_dir + f'/D38999-26A{shell_size}XXX{keying}.3mf'
+def export_bodies(objects, output_dir:str, file_template:str, keying:str, shell_size:str)->None:
+    export_path = output_dir + file_template.format(size=shell_size, keying=keying) + '.3mf'
     if hasattr(Mesh, "exportOptions"):
         options = Mesh.exportOptions(export_path)
-        Mesh.export(__objs__, export_path, options)
+        Mesh.export(objects, export_path, options)
     else:
-        Mesh.export(__objs__, export_path)
-
-    del __objs__
+        Mesh.export(objects, export_path)
 
 
+export_shells(plug_config)
 
-for shell_size in SHELL_SIZES:
-    print(f'Exporting plugs with shell size {shell_size}...')
-    start_time = time.time()
-    current_output_directory = OUTPUT_PATH + f'/shell_size_{shell_size}'
-    if not os.path.exists(current_output_directory):
-        os.makedirs(current_output_directory)
-
-    for keying in KEYING_OPTIONS:
-        export3mf(output_dir=current_output_directory, keying=keying, shell_size=shell_size)
-    end_time = time.time()
-    print(f'\nDone! Exported {len(KEYING_OPTIONS)} plugs for shell size {shell_size}. Took {(end_time-start_time):.3f}s.')
