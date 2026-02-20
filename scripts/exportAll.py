@@ -3,6 +3,8 @@ import os
 import time
 from dataclasses import dataclass
 
+import arguably
+
 @dataclass
 class ShellConfig:
     file: str
@@ -63,28 +65,29 @@ def export_shells(config: ShellConfig)->None:
 
     shell_document = FreeCAD.openDocument(config.file)
     
-    for shell_size in config.shell_sizes:
-        print(f'Exporting {config.document_name} shells with size {shell_size}...')
+    for keying in config.keying_options:
+        print(f'Exporting {config.document_name} shells with keying {keying}...')
         start_time = time.time()
-        current_output_directory = setup_output_directory(config.output_path_root, shell_size)
-        for keying in config.keying_options:
+        current_output_directory = setup_output_directory(config.output_path_root, keying)
+        for shell_size in config.shell_sizes:
+            print(f"Shell size: {shell_size}")
             export3mf(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size)
         end_time = time.time()
-        print(f'\nExported {len(KEYING_OPTIONS)} shells. Took {(end_time-start_time):.3f}s.')
+        print(f'\nExported {len(SHELL_SIZES)} shells. Took {(end_time-start_time):.3f}s.')
 
 
-def setup_output_directory(output_path_root:str, shell_size:str)->str:
+def setup_output_directory(output_path_root:str, keying:str)->str:
     """Setup a shell output directory. Generates a folder
-    for the shell size under the root if it does not exist. 
+    for the keying under the root if it does not exist. 
 
     Args:
         output_path_root (str): Root for the output directories
-        shell_size (str): size of shell being exported
+        keying (str): keying option being exported
 
     Returns:
         str: path to the created or computed output directory
     """
-    current_output_directory = output_path_root + f'/shell_size_{shell_size}'
+    current_output_directory = output_path_root + f'/keying_{keying}'
     if not os.path.exists(current_output_directory):
         os.makedirs(current_output_directory)
     return current_output_directory
@@ -217,6 +220,7 @@ start = time.time()
 export_shells(plug_config)
 end = time.time()
 print(f'\nDone. Took {end-start:.3f}s')
+
 print("\nExporting receptacles. This may take a while...")
 start = time.time()
 export_shells(receptacle_config)

@@ -1,0 +1,2 @@
+arguably==1.3.0
+docstring_parser==0.16
