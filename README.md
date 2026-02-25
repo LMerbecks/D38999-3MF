@@ -49,6 +49,21 @@ branches.
 
 ## Usage
 
+A connector system consists of a receptacle and a plug. You
+can mate the plug to the receptacle by turning the plug on
+the receptacle until the keys align. The connectors should
+move closer together at that point. Then you pull the
+connection closed by rotating the coupling nut on the plug
+clockwise. Turn the coupling nut until the groove on the
+receptacle is covered by the nut. To release the connector rotate the coupling nut
+counter-clockwise.
+
+![Animation showing mating of
+connectors](images/connector_mating.gif)
+
+*Animation of
+connectors mating*
+
 To build a connector system you have to 
 1. choose shells, and
 2. choose an insert arrangement. 
