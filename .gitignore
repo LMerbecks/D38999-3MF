@@ -38,3 +38,7 @@ fp-info-cache
 
 # Local project settings
 *.kicad_prl
+
+# FreeCAD 
+**/*.FCBak
+**/*.3mf
