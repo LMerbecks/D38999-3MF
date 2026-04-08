@@ -44,3 +44,5 @@ fp-info-cache
 **/*.3mf
 
 **/__pycache__/*
+
+**/drawings/*.svg
