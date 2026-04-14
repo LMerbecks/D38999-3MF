@@ -46,3 +46,5 @@ fp-info-cache
 **/__pycache__/*
 
 **/drawings/*.svg
+
+**/.venv
