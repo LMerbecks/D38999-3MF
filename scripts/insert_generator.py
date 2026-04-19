@@ -13,7 +13,8 @@ CIVIL_TO_MIL_SHELL_SIZES = {'9': 'A', '11': 'B', '13': 'C', '15': 'D',
                              '17': 'E', '19': 'F', '21': 'G', '23': 'H', '25': 'J'}
 
 DOMAIN_3MF = '.3mf'
-DEFAULT_
+DEFAULT_OUTPUT_DIR = '../output/inserts'
+DEFAULT_DIMENSIONS_DIR = '../dimensions'
 
 BOOLEAN_CUT_CODE = 1
 TOOL_BODY_ID = 'Body'
@@ -23,7 +24,7 @@ if Path.exists(PIN_INSERT_DOCUMENT_NAME):
 
 SOCKET_INSERT_DOCUMENT_NAME = Path('../models/SocketInserts.FCStd')
 if Path.exists(SOCKET_INSERT_DOCUMENT_NAME):
-    SOCKET_INSERT_DOCUMENT = FreeCAD.openDocument(SOCKET_INSERT_DOCUMENT_NAME)
+    SOCKET_INSERT_DOCUMENT = FreeCAD.openDocument(str(SOCKET_INSERT_DOCUMENT_NAME))
 
 USE_ALL_CONFIGS = False
 
@@ -40,8 +41,8 @@ DUMMY_LABEL_TEMPLATE = "Size{shell_size}InsertDummy"
 class InsertFactory():
 
     gender: str
-    output_dir: Path=Path()
-    input_dir: Path=Path('../dimensions')
+    output_dir: Path=Path(DEFAULT_OUTPUT_DIR)
+    dimensions_dir: Path=Path(DEFAULT_DIMENSIONS_DIR)
 
     def __post_init__(self):
         if self.gender != 'P' and self.gender != 'S':
@@ -52,7 +53,7 @@ class InsertFactory():
             self.root_document = SOCKET_INSERT_DOCUMENT
 
     def generate_insert(self, arrangement_config: Path):
-        arrangement_csv = self.input_dir / arrangement_config
+        arrangement_csv = self.dimensions_dir / arrangement_config
         shell_size, contact_positions = self.parse_arrangement_csv(arrangement_csv)
         tool_body = self.get_contact_tool_body()
         insert_dummy = self.get_insert_dummy(shell_size)
@@ -77,7 +78,7 @@ class InsertFactory():
         positions = self.get_contact_positions(csv_filename)
         if self.gender == 'S':
             positions = self.invert_positions(positions)
-            return positions
+            return CIVIL_TO_MIL_SHELL_SIZES[shell_size], positions
         return CIVIL_TO_MIL_SHELL_SIZES[shell_size], positions
     
     def get_contact_positions(self, csv_filename:Path)->np.array:
@@ -112,7 +113,8 @@ class InsertFactory():
         Returns:
             np.array: socket contact positions in x and z
         """
-        pass
+        pin_contact_positions[:,0] = -1 * pin_contact_positions[:,0] 
+        return pin_contact_positions
 
     def get_contact_tool_body(self)->None:
         """Gets the contact tool body in the current
@@ -230,10 +232,12 @@ class InsertFactory():
         self.root_document.recompute()
         #TODO: make this export to shell size directories
         #instead and insert the gender into the filename.
-        export_directory = self.output_dir / self.gender 
+        shell_size = insert_identifier.split('-')[0]
+        mil_shell_size = CIVIL_TO_MIL_SHELL_SIZES[shell_size]
+        export_directory = self.output_dir / mil_shell_size
         if not export_directory.exists():
             export_directory.mkdir()
-        export_path = export_directory / (insert_identifier + DOMAIN_3MF)
+        export_path = export_directory / (insert_identifier + self.gender + DOMAIN_3MF)
         export_path = str(export_path)
 
         if hasattr(Mesh, "exportOptions"):
@@ -245,10 +249,10 @@ class InsertFactory():
 
 def main():
     pin_insert_factory = InsertFactory('P')
-    # socket_insert_factory = InsertFactory('S')
+    socket_insert_factory = InsertFactory('S')
     for arrangement in ARRANGEMENT_CONFIGURATIONS:
         pin_insert_factory.generate_insert(Path(arrangement))
-        # socket_insert_factory.generate_insert(arrangement)
+        socket_insert_factory.generate_insert(Path(arrangement))
 
 
 
