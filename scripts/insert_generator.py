@@ -26,14 +26,17 @@ SOCKET_INSERT_DOCUMENT_NAME = Path('../models/SocketInserts.FCStd')
 if Path.exists(SOCKET_INSERT_DOCUMENT_NAME):
     SOCKET_INSERT_DOCUMENT = FreeCAD.openDocument(str(SOCKET_INSERT_DOCUMENT_NAME))
 
-USE_ALL_CONFIGS = False
+USE_ALL_CONFIGS = True
 
 ARRANGEMENT_CONFIGURATIONS = ["9-3_contact_positions.csv", 
                               "11-2_contact_positions.csv",
                               "11-4_contact_positions.csv",
                               "11-5_contact_positions.csv"]
+ARRANGEMENT_CONFIGURATIONS = [Path(arrangment) for arrangment in ARRANGEMENT_CONFIGURATIONS]
+
 if USE_ALL_CONFIGS:
-    ARRANGEMENT_CONFIGURATIONS = []
+    ARRANGEMENT_CONFIGURATIONS = sorted(Path(DEFAULT_DIMENSIONS_DIR).glob('*-*.csv'))
+    ARRANGEMENT_CONFIGURATIONS = [arrangement.name for arrangement in ARRANGEMENT_CONFIGURATIONS]
 
 DUMMY_LABEL_TEMPLATE = "Size{shell_size}InsertDummy"
 
@@ -239,7 +242,6 @@ class InsertFactory():
             export_directory.mkdir()
         export_path = export_directory / (insert_identifier + self.gender + DOMAIN_3MF)
         export_path = str(export_path)
-
         if hasattr(Mesh, "exportOptions"):
             options = Mesh.exportOptions(export_path)
             Mesh.export([insert_body], export_path, options)
@@ -251,8 +253,8 @@ def main():
     pin_insert_factory = InsertFactory('P')
     socket_insert_factory = InsertFactory('S')
     for arrangement in ARRANGEMENT_CONFIGURATIONS:
-        pin_insert_factory.generate_insert(Path(arrangement))
-        socket_insert_factory.generate_insert(Path(arrangement))
+        pin_insert_factory.generate_insert(arrangement)
+        socket_insert_factory.generate_insert(arrangement)
 
 
 
