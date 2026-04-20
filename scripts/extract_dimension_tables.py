@@ -11,7 +11,7 @@ END_PAGE = 167 + 5 + 1
 
 CONTACTS_TO_OMIT = ['22M', '22D', '22', '23-22']
 
-DIMENSIONS_DIR = Path("./dimensions")
+DIMENSIONS_DIR = Path("../dimensions")
 MIL_STD_PATH = DIMENSIONS_DIR / Path("MIL-STD-1560C_CHG-2.pdf")
 
 APPLICABLE_INSERT_ARRANGEMENTS = DIMENSIONS_DIR / Path("applicable_insert_arrangements.csv")
