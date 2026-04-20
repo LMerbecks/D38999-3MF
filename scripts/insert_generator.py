@@ -5,6 +5,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from tqdm import tqdm
+
 import pdb
 from dataclasses import dataclass
 
@@ -232,9 +234,8 @@ class InsertFactory():
             insert_identifier (str): The identifier of the
             exported body
         """
+        tqdm.write(f"Exporting insert {insert_identifier + self.gender}...")
         self.root_document.recompute()
-        #TODO: make this export to shell size directories
-        #instead and insert the gender into the filename.
         shell_size = insert_identifier.split('-')[0]
         mil_shell_size = CIVIL_TO_MIL_SHELL_SIZES[shell_size]
         export_directory = self.output_dir / mil_shell_size
@@ -252,7 +253,7 @@ class InsertFactory():
 def main():
     pin_insert_factory = InsertFactory('P')
     socket_insert_factory = InsertFactory('S')
-    for arrangement in ARRANGEMENT_CONFIGURATIONS:
+    for arrangement in tqdm(ARRANGEMENT_CONFIGURATIONS, desc='Generating inserts...', position=0):
         pin_insert_factory.generate_insert(arrangement)
         socket_insert_factory.generate_insert(arrangement)
 
