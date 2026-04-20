@@ -1,9 +1,11 @@
+import FreeCAD
 import Mesh
 import os
 import time
+
+from tqdm import tqdm
 from dataclasses import dataclass
 
-import arguably
 
 @dataclass
 class ShellConfig:
@@ -17,17 +19,7 @@ class ShellConfig:
     keying_options: list[str]
     
 SHELL_SIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
-INSERT_TEMPLATES = {
-    'A': "9-1{gender}", 
-    'B': "11-4{gender}",
-    'C': "13-8{gender}", 
-    'D': "15-12{gender}",
-    'E': "17-18{gender}",
-    'F': "19-26{gender}",
-    'G': None,
-    'H': None,
-    'J': None
-}
+
 KEYING_OPTIONS = ['N', 'A', 'B', 'C', 'D', 'E']
 
 
@@ -50,30 +42,21 @@ receptacle_config = ShellConfig(file = "../models/D38999-20AXXXXX.FCStd",
                                shell_sizes=SHELL_SIZES,
                                keying_options=KEYING_OPTIONS)
 
-INSERT_DOCUMENTS = {
-    'P': receptacle_config.document_name,
-    'S': plug_config.document_name
-}
-
-INSERT_FILES = {
-    'P': receptacle_config.file,
-    'S': plug_config.file
-}
-
-
 def export_shells(config: ShellConfig)->None:
+    """Export shell bodys (receptacles and plugs) to 3mf.
+    All combinations of keying option and shell size as
+    described in the config are exported. 
+
+    Args:
+        config (ShellConfig): Export config options object
+    """
 
     shell_document = FreeCAD.openDocument(config.file)
     
-    for keying in config.keying_options:
-        print(f'Exporting {config.document_name} shells with keying {keying}...')
-        start_time = time.time()
+    for keying in tqdm(config.keying_options, desc=f'Exporting keying options',position=0):
         current_output_directory = setup_output_directory(config.output_path_root, keying)
-        for shell_size in config.shell_sizes:
-            print(f"Shell size: {shell_size}")
+        for shell_size in tqdm(config.shell_sizes, desc=f'Exporting shell sizes',position=1,leave=False):
             export3mf(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size)
-        end_time = time.time()
-        print(f'\nExported {len(SHELL_SIZES)} shells. Took {(end_time-start_time):.3f}s.')
 
 
 def setup_output_directory(output_path_root:str, keying:str)->str:
@@ -121,6 +104,18 @@ def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:s
 
 
 def set_shell_options(shell_part, keying, shell_size):
+    """Set the option of a FreeCAD shell part according to
+    keying and shell size
+
+    Args:
+        shell_part (_type_): part to set configuration of
+        keying (_type_): keying option
+        shell_size (_type_): shell size
+
+    Raises:
+        ValueError: If keying option is not supported
+        ValueError: If shell size is not supported
+    """
     if keying not in KEYING_OPTIONS:
         raise ValueError(f'Unsupported keying option: {keying}')
     if shell_size not in SHELL_SIZES:
@@ -163,6 +158,19 @@ def build_keying_option_code(keying:str, shell_size:str) -> str:
 
 
 def gather_bodies(shell_document, body_labels: list[str])->list:
+    """Gather all bodies in a FreeCAD document with
+    specified labels into a set. 
+
+    Args:
+        shell_document (_type_): FreeCAD document containing bodies
+        body_labels (list[str]): Body labels
+
+    Raises:
+        ValueError: If label is ambiguous
+
+    Returns:
+        list: List of the bodies
+    """
     objects = []
     for label in body_labels:
         objects_with_label = shell_document.getObjectsByLabel(label)
@@ -172,58 +180,28 @@ def gather_bodies(shell_document, body_labels: list[str])->list:
     return objects
 
 
-def export_bodies(objects, export_path:str)->None:
+def export_bodies(objects:list[object], export_path:str)->None:
+    """Export a set of bodies to a geometry file.
+
+    Args:
+        objects (list[object]): List of FreeCAD.body objects
+        to export
+        export_path (str): Path to export to. File extension
+        determines output format.
+    """
     if hasattr(Mesh, "exportOptions"):
         options = Mesh.exportOptions(export_path)
         Mesh.export(objects, export_path, options)
     else:
         Mesh.export(objects, export_path)
 
-def export_inserts(file_paths:str, output_root:str):
+def main():
+    tqdm.write("Exporting plugs. This may take a while...")
+    export_shells(plug_config)
 
-    genders = ['P', 'S']
-    
-    for gender in genders:
-        file = file_paths[gender]
-        insert_doc = FreeCAD.openDocument(file)
-        output_dir = output_root + '/' + gender 
-        if not os.path.exists(output_dir): 
-            os.makedirs(output_dir)
-        for shell in SHELL_SIZES:
-            current_template = INSERT_TEMPLATES[shell]
-            if current_template is None:
-                continue
-            export_insert(gender, insert_doc, output_dir, current_template)
+    tqdm.write("\nExporting receptacles. This may take a while...")
+    export_shells(receptacle_config)
 
-def export_insert(gender, insert_doc, output_dir, current_template):
-    insert_label = current_template.format(gender=gender) + "_insert"
-    insert_candidates = insert_doc.getObjectsByLabel(insert_label)
-    if len(insert_candidates) > 1: 
-        raise ValueError(f'Multiple objects with label: {insert_label}')
-    if len(insert_candidates) < 1:
-        raise ValueError(f'No object with label: {insert_label}')
-    insert_body = insert_candidates[0]
-    bodies = [insert_body]
-    export_path = output_dir + '/' + current_template.format(gender=gender) + '.3mf'
-    export_bodies(bodies, export_path)
 
-        
-
-print('Exporting inserts...')
-start = time.time()
-export_inserts(INSERT_FILES, '../output/inserts')
-end = time.time()
-print(f'\nDone. Took {end-start:.3f}s')
-
-print("Exporting plugs. This may take a while...")
-start = time.time()
-export_shells(plug_config)
-end = time.time()
-print(f'\nDone. Took {end-start:.3f}s')
-
-print("\nExporting receptacles. This may take a while...")
-start = time.time()
-export_shells(receptacle_config)
-end = time.time()
-print(f'\nDone. Took {end-start:.3f}s')
-
+if __name__ == 'exportAll':
+    main()
