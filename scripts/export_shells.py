@@ -203,5 +203,4 @@ def main():
     export_shells(receptacle_config)
 
 
-if __name__ == 'exportAll':
-    main()
+main()

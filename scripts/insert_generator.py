@@ -259,5 +259,4 @@ def main():
 
 
 
-if __name__ == 'insert_generator':
-    main()
+main()
