@@ -48,3 +48,4 @@ fp-info-cache
 **/drawings/*.svg
 
 **/.venv
+*images/printables**
