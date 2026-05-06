@@ -53,24 +53,24 @@ def export_shells(config: ShellConfig)->None:
 
     shell_document = FreeCAD.openDocument(config.file)
     
-    for keying in tqdm(config.keying_options, desc=f'Exporting keying options',position=0):
-        current_output_directory = setup_output_directory(config.output_path_root, keying)
-        for shell_size in tqdm(config.shell_sizes, desc=f'Exporting shell sizes',position=1,leave=False):
+    for shell_size in tqdm(config.shell_sizes, desc=f'Exporting shell sizes',position=0):
+        current_output_directory = setup_output_directory(config.output_path_root, shell_size)
+        for keying in tqdm(config.keying_options, desc=f'Exporting keying options',position=1, leave=False):
             export3mf(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size)
 
 
-def setup_output_directory(output_path_root:str, keying:str)->str:
+def setup_output_directory(output_path_root:str, shell_size:str)->str:
     """Setup a shell output directory. Generates a folder
-    for the keying under the root if it does not exist. 
+    for the shell_size under the root if it does not exist. 
 
     Args:
         output_path_root (str): Root for the output directories
-        keying (str): keying option being exported
+        shell_size (str): shell size being exported
 
     Returns:
         str: path to the created or computed output directory
     """
-    current_output_directory = output_path_root + f'/keying_{keying}'
+    current_output_directory = output_path_root + f'/{shell_size}'
     if not os.path.exists(current_output_directory):
         os.makedirs(current_output_directory)
     return current_output_directory
