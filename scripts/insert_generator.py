@@ -1,6 +1,8 @@
 import FreeCAD
 import Mesh
 
+from typing import Iterable
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -37,7 +39,7 @@ ARRANGEMENT_CONFIGURATIONS = ["9-3_contact_positions.csv",
 ARRANGEMENT_CONFIGURATIONS = [Path(arrangment) for arrangment in ARRANGEMENT_CONFIGURATIONS]
 
 if USE_ALL_CONFIGS:
-    ARRANGEMENT_CONFIGURATIONS = sorted(Path(DEFAULT_DIMENSIONS_DIR).glob('*-*.csv'))
+    ARRANGEMENT_CONFIGURATIONS = sorted(Path(DEFAULT_DIMENSIONS_DIR).glob('*-*_contact_positions.csv'))
     ARRANGEMENT_CONFIGURATIONS = [arrangement.name for arrangement in ARRANGEMENT_CONFIGURATIONS]
 
 DUMMY_LABEL_TEMPLATE = "Size{shell_size}InsertDummy"
@@ -57,7 +59,14 @@ class InsertFactory():
         if self.gender == 'S':
             self.root_document = SOCKET_INSERT_DOCUMENT
 
-    def generate_insert(self, arrangement_config: Path):
+    def generate_insert(self, arrangement_config: Iterable[Path]):
+        """Generate inserts from a list of dimension
+        definition files and export them as 3mf.
+
+        Args:
+            arrangement_config (Iterable[Path]): The paths
+            to the dimension definition files. 
+        """
         arrangement_csv = self.dimensions_dir / arrangement_config
         shell_size, contact_positions = self.parse_arrangement_csv(arrangement_csv)
         tool_body = self.get_contact_tool_body()
@@ -78,6 +87,17 @@ class InsertFactory():
         self.export_insert(insert_body, insert_identifier)
 
     def parse_arrangement_csv(self,csv_filename:Path)->tuple[str, np.array]:
+        """Parse an arrangement dimension csv. Get the
+        contact positions and the shell size from it. Inverts
+        the positions for the socket contacts.
+
+        Args:
+            csv_filename (Path): The path of the csv file.
+
+        Returns:
+            tuple[str, np.array]: The shell size of the
+            insert and the positions
+        """
         file_name = csv_filename.stem
         shell_size = file_name.split('-')[0]
         positions = self.get_contact_positions(csv_filename)

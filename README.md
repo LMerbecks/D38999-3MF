@@ -11,7 +11,8 @@ connector system uses Molex
 [1561](https://www.molex.com/en-us/products/series-chart/1561)
 and
 [1560](https://www.molex.com/en-us/products/series-chart/1560)
-stamped circular crimp contacts. Note this connector system
+stamped circular crimp contacts. 
+> Note this connector system
 does not claim full compatibility and compliance with the
 standards mentioned. 
 
@@ -27,21 +28,22 @@ triple start thread for mating.
 
 These connectors are durable,
 [scoop-proof](https://www.microwaves101.com/encyclopedias/scoop-proof-connectors)
-and satisfying to work with. However, they are also very
+and satisfying to work with. However, they are also
 expensive and thus not an option for small or hobby
 projects. This project aims to change that by making these
 connectors accessible to a broader audience via additive
 manufacturing. Surely these versions will never match the
 characteristics of the industrial versions but they make the
-D38999 accessible to more people than just industry
+D38999 concept with almost all advantages accessible to more people than just industry
 branches. 
 
 ## Specifications and Features
 
-- 90 unique connector systems in nine different sizes
+- 336 unique connector systems in nine different sizes
 - M3 bolt holes for mounting of receptacle
 - Up to 26 contacts per connector
 - Polarized and scoop proof
+- Up to 56 contacts per connector
 - 1.25 turns to fully lock
 - cheap and accessible contacts $<0.10€$ per contact
 - mated length $30mm$
@@ -76,7 +78,8 @@ following sections.
 Shells are the frames of the connector system that in turn
 hold the fixture (insert) that locates the electrical
 contacts. They are the outermost part of the connector and
-thus are called shells.
+thus are called shells. Their primary function is the
+mechanical mating.
 
 The shells are characterized by part numbers in this format:
 
@@ -123,12 +126,13 @@ size. For the shells the military code is used in this repository.
 plugs](images/different_size_plugs.jpg)*Different shell size
 plugs: size B on the left and size C on the right*
 
-In general larger connectors can hold more electrical contacts.
+In general larger connectors can hold inserts with more electrical contacts.
 
 #### Shell keying
 
 Shells of the same size can have different keying options.
-Only plugs and receptacles with matching keying options can
+Only plugs and receptacles with matching **keying options and
+shell sizes** can
 mate.
 
 This mechanically prevents mating of wrong connector pairs.
@@ -145,15 +149,18 @@ Here option `N` is the most common "normal" option.
 
 #### Building shell part numbers
 
-To summarize to build a shell part number you 
+In conclusion, to build a shell part number you 
 1. select the shell type,
 2. select the shell size,
 3. select the shell keying.
 
+The CAD models for the shells are found in the `/models/`
+directory. They are modeled using [FreeCAD](https://www.freecad.org).
+
 ### Inserts
 
 Inserts are the inner parts of the connector system that
-locate the electrical contacts. The insert arrangements part
+locate the electrical contacts. The insert arrangement part
 numbers look like this:
 
 `<SZ>-<IA><G>` where
@@ -167,36 +174,82 @@ The shell size determines which shell sizes the insert can
 be used with. It primarily determines the outside diameter
 of the insert. 
 
-Currently the following shell sizes (military code with
-civilian code in parentheses) have at least one insert
-available:
-
-`A(9), B(11), C(13), D(15), E(17), F(19)`
+All shell sizes have at least two insert arrangements
+available right now.
 
 #### Insert arrangement
 
 The insert arrangement determines how the contacts are
-arranged in the insert. The code tells you how many contacts
-can find place in a insert. 
+arranged in the insert. The code hints how many contacts
+can find place in a insert. This is not always the case.
 
 The following insert arrangements (combined with the shell
-size) are available right now
+size) are available
 
-| Insert Arrangement Code | Number of Contacts | 
-| ------------------ | -------- |
-| 9-1 | 1 |
-| 11-4 | 4 |
-| 13-8 | 8 |
-| 15-12 | 12 |
-| 17-18 | 18 |
-| 19-26 | 26 |
+| Insert Arrangement Name | Number of contacts | Tested |
+|------------------------|-------------------| -------- |
+| 9-3                    | 3                 | :white_check_mark: |
+| 9-98                   | 3                 | :white_check_mark: |
+| 11-2                   | 2                 | :white_check_mark: |
+| 11-4                   | 4                 | :white_check_mark: |
+| 11-5                   | 5                 | :white_check_mark: |
+| 11-98                  | 6                 | :white_check_mark: |
+| 11-99                  | 7                 | :white_check_mark: |
+| 13-4                   | 4                 | :white_check_mark: |
+| 13-8                   | 8                 | :white_check_mark: |
+| 13-98                  | 10                | :white_check_mark: |
+| 15-5                   | 5                 | :white_check_mark: |
+| 15-15                  | 15                | :white_check_mark: |
+| 15-18                  | 18                | :white_check_mark: |
+| 15-19                  | 19                | :white_check_mark: |
+| 15-97                  | 12                | :white_check_mark: |
+| 17-6                   | 6                 | :x: |
+| 17-8                   | 8                 | :x: |
+| 17-11                  | 11                | :x: |
+| 17-26                  | 26                | :x: |
+| 19-11                  | 11                | :x: |
+| 19-28                  | 28                | :x: |
+| 19-30                  | 30                | :x: |
+| 19-32                  | 32                | :x: |
+| 21-11                  | 11                | :x: |
+| 21-16                  | 16                | :x: |
+| 21-24                  | 24                | :x: |
+| 21-25                  | 25                | :x: |
+| 21-27                  | 27                | :x: |
+| 21-29                  | 26                | :x: |
+| 21-39                  | 39                | :x: |
+| 21-75                  | 4                 | :x: |
+| 21-76                  | 4                 | :x: |
+| 23-21                  | 21                | :x: |
+| 23-32                  | 32                | :x: |
+| 23-34                  | 34                | :x: |
+| 23-36                  | 36                | :x: |
+| 23-53                  | 53                | :x: |
+| 23-55                  | 55                | :x: |
+| 23-97                  | 16                | :x: |
+| 23-99                  | 11                | :x: |
+| 25-4                   | 56                | :x: |
+| 25-8                   | 8                 | :x: |
+| 25-10                  | 8                 | :x: |
+| 25-11                  | 11                | :x: |
+| 25-19                  | 19                | :x: |
+| 25-20                  | 30                | :x: |
+| 25-21                  | 30                | :x: |
+| 25-24                  | 24                | :x: |
+| 25-29                  | 29                | :x: |
+| 25-37                  | 37                | :x: |
+| 25-43                  | 43                | :x: |
+| 25-46                  | 46                | :x: |
+| 25-47                  | 46                | :x: |
+| 25-61                  | 61                | :x: |
+| 25-90                  | 46                | :x: |
+| 25-91                  | 46                | :x: |
 
 Where possible standard insert arrangements are used as
-specified in MIL-STD-1560C
+specified in MIL-STD-1560C.
 
-Development is proceeding for further insert arrangements.
-If you would like to contribute, feel free to fork the
-repository.
+Not all inserts have been tested yet. Feel free to
+contribute here.
 
 #### Gender
 
@@ -223,6 +276,10 @@ to
 Most of the time you'll want to get both genders of an
 insert, however.
 
+Insert are automatically generated through scripts located
+in `/scripts/`. The base models are designed in
+[FreeCAD](https://www.freecad.org) and are located in `/models/` 
+
 ## Manufacturing and Assembly
 
 There are a few important notices you should follow when
@@ -231,7 +288,7 @@ the following section.
 
 ### Manufacturing
 
-Download or export the model files and slice them. We had
+[Download](https://www.printables.com/@leandermerbe_4394823/collections/3171811) or [export](/scripts/) the model files and slice them. We had
 good results with 0.2mm layer height. Print the shells in
 the orientation shown in the figure below.
 
@@ -287,17 +344,6 @@ the contact is just barely inside of the insert.
 ![Installing the contacts](images/contact_insertion.JPG)
 *Installing crimp contacts*
 
-> **IMPORTANT**
->
-> Due to bad crimping tools we tested the inserts with
-> contacts that had their insulation crimp flanges sheared
-> of. Your contacts might not fit the insert if the crimp is
-> done properly. We are working on updating the inserts. 
-
-> **IMPORTANT**
->
-> You may have to deform the back part of the crimp contact
-> slightly to make the contact fit into the insert.
 
 At last, you have your completed connector system:
 ![Completed connector
@@ -307,21 +353,24 @@ connector system*
 ## Developer Instructions
 
 So you want to have a deeper look into this repository and
-how the CAD files are working? We look at two parts here
+how the CAD files are working? We look at three parts here
 1. the CAD files,
-2. exporting the models.
+2. exporting the models, and
+3. generating inserts.
 
 ### CAD files
 
 The CAD files are developed with
-[FreeCAD](https://www.freecad.org/) and split into only two
+[FreeCAD](https://www.freecad.org/) and split into only four
 files
-1. a file for the receptacle, and
-2. a file for the plug
+1. a file for the receptacle `/models/D38999-26AXXXXX.FCStd`,
+2. a file for the plug `/models/D38999-20AXXXXX.FCStd`,
+3. a file for the pin inserts `/models/PinInserts.FCStd`, and 
+4. a file for the socket inserts. `/models/SocketInserts.FCStd`
 
-Due to historic reasons (which might change in the future)
-the pin inserts are included in the receptacle file and the
-socket inserts are included in the plug file. 
+Historically, the receptacle and plug files contained the
+geometry of the inserts. When automation was deployed in
+the insert generation this was changed.
 
 The models are parametrized and the shell size and keying
 option can be changed by accessing the corresponding attributes of the
@@ -330,58 +379,181 @@ inspector. Note that keying options vary for shell sizes and
 are thus given with the keying code and all applicable shell
 sizes afterward. 
 
-The inserts are independent bodies and were designed by
-hand. It has now come to our attention that creating the
-inserts should also be performed by scripting using a single
-tool body for the contact hole and blank bodies for the
-default insert shape. 
+The insert models are generated automatically and also
+exported in one go. The models for them contain the
+base body that fits into the shell and a tool body that is
+used to form the contact fixtures for all inserts. 
 
 ### Export
 
-You may realize that with the combination of all shell sizes
-and the different keying options there are a lot of models
-to export. 
-
-To make this easier and less error prone a script was
-written that uses the FreeCAD python interpreter to
-automatically export all combinations of the connectors. 
-
-To call it execute the following commands from the root of
-the repository 
-
+As there are a lot of geometries to export, this process is
+automated with scripts located in `/scripts/`. The export is split into different procedures for
+inserts and shells. It uses python and the python interface
+of FreeCAD. Before starting you need to install
+dependencies: 
 ```bash
-> cd ./scripts
+> cd ./scripts/
+> python3 -m venv .venv
+> source .venv/bin/activate
+> pip install -r requirements.txt 
+> # this is for the export using FreeCAD python
 > freecad.pip install -r requirements.txt
-> freecad.cmd exportAll.py
 ```
 
-The script will then export all models and all inserts in
-the following folder structure in the directory `./output`:
+Then you can start the export which is described for shells
+and inserts separately.
+
+#### Shells
+
+To export shells we use the `export_shells.py` script. It
+changes the keying option and shell size of both shell
+models, recomputes the model and exports a `.3mf` to
+`/output/`. Note that the export can take up to six minutes.
+
+To run it type:
 
 ```bash
-> tree -d ./output
-./output/
-├── inserts
-│   ├── P
-│   └── S
-├── plugs
-│   ├── keying_A
-│   ├── keying_B
-│   ├── keying_C
-│   ├── keying_D
-│   ├── keying_E
-│   └── keying_N
-└── wall_mount_receptacles
-    ├── keying_A
-    ├── keying_B
-    ├── keying_C
-    ├── keying_D
-    ├── keying_E
-    └── keying_N
+> cd scripts
+> freecad.cli export_shells.py
 ```
 
-The inserts are split into pin and socket inserts. The
-shells are split into the different keying options.
+After the run your output directory should look like this (abbreviated).
+
+```bash
+> tree ./output/
+./output/
+├── plugs
+│   ├── A
+│   │   ├── D38999-26AAXXXA.3mf
+│   │   ├── D38999-26AAXXXB.3mf
+│   │   ├── D38999-26AAXXXC.3mf
+│   │   ├── D38999-26AAXXXD.3mf
+│   │   ├── D38999-26AAXXXE.3mf
+│   │   └── D38999-26AAXXXN.3mf
+│   ├── B
+│   │   └── ...
+│   ├── C
+│   │   └── ...
+│   ├── D
+│   │   └── ...
+│   ├── E
+│   │   └── ...
+│   ├── F
+│   │   └── ...
+│   ├── G
+│   │   └── ...
+│   ├── H
+│   │   └── ...
+│   └── J
+│   │   └── ...
+└── wall_mount_receptacles
+    ├── A
+    │   ├── D38999-20AAXXXA.3mf
+    │   ├── D38999-20AAXXXB.3mf
+    │   ├── D38999-20AAXXXC.3mf
+    │   ├── D38999-20AAXXXD.3mf
+    │   ├── D38999-20AAXXXE.3mf
+    │   └── D38999-20AAXXXN.3mf
+    ├── B
+    │   └── ...
+    ├── C
+    │   └── ...
+    ├── D
+    │   └── ...
+    ├── E
+    │   └── ...
+    ├── F
+    │   └── ...
+    ├── G
+    │   └── ...
+    ├── H
+    │   └── ...
+    └── J
+        └── ...
+```
+
+The geometries are exported sorted by shell type, shell size
+and then keying option. 
+
+#### Inserts
+
+The insert export is a two step process. First the
+dimensions are extracted from the MIL-STD-1560 pdf. This is
+done with python via the following command. It may take a
+few minutes to run. 
+
+```bash
+> cd scripts
+> python3 extract_dimension_tables.py
+```
+The script scans the standard for any inserts for the D38999
+Series III connectors that have no contacts smaller than
+size 20. This ensures the Molex 1560 and 1561 contacts fit
+into the insert. 
+
+After the command the `/dimensions/` directory should
+look like this:
+
+```bash
+tree dimensions/
+dimensions/
+├── 11-2_contact_positions.csv
+├── 11-4_contact_positions.csv
+├── ...
+├── applicable_insert_arrangements.csv
+├── MIL-STD-1560C_CHG-2.pdf
+└── overview.csv
+```
+
+The `*_contact_positions.csv` files contain the positions
+for the contacts of every insert-arrangement. The
+`applicable_insert_arrangements.csv` is a simple list of all
+insert arrangements that are available for this connector
+series. Likewise `overview.csv` lists the available insert
+arrangements with the available amounts of contacts, as in
+the table above. 
+
+Next, the FreeCAD CLI is used to generate all inserts that
+are in the `dimensions` directory. Note that you may define
+custom insert arrangements with unique file names following
+the naming convention. This script can take a few minutes to
+run. 
+
+```bash
+> cd scripts
+> freecad.cli insert_generator.py
+```
+
+Now the `output` directory should contain all exported
+insert models. 
+
+```bash
+> tree output
+output
+└── inserts
+    ├── A
+    │   ├── 9-3P.3mf
+    │   ├── 9-3S.3mf
+    │   ├── 9-98P.3mf
+    │   └── 9-98S.3mf
+    ├── B
+    │   └── ...
+    ├── C
+    │   └── ...
+    ├── D
+    │   └── ...
+    ├── E
+    │   └── ...
+    ├── F
+    │   └── ...
+    ├── G
+    │   └── ...
+    ├── H
+    │   └── ...
+    └── J
+        └── ...
+```
+
 
 ## Credits
 
