@@ -41,13 +41,12 @@ branches.
 
 - 336 unique connector systems in nine different sizes
 - M3 bolt holes for mounting of receptacle
-- Up to 26 contacts per connector
 - Polarized and scoop proof
-- Up to 56 contacts per connector
+- Up to 61 contacts per connector
 - 1.25 turns to fully lock
-- cheap and accessible contacts $<0.10€$ per contact
-- mated length $30mm$
-- max footprint $46\times 46 mm$
+- cheap and accessible contacts <0.10€ per contact
+- mated length 30mm
+- max footprint 46 x 46 mm
 
 ## Usage
 
