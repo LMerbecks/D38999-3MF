@@ -1,5 +1,6 @@
 import FreeCAD
 import Mesh
+import Import
 
 from typing import Iterable
 
@@ -15,6 +16,8 @@ from dataclasses import dataclass
 SHELL_SIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
 CIVIL_TO_MIL_SHELL_SIZES = {'9': 'A', '11': 'B', '13': 'C', '15': 'D',
                              '17': 'E', '19': 'F', '21': 'G', '23': 'H', '25': 'J'}
+
+EXPORTERS = {'.3mf': Mesh, '.step': Import}
 
 DOMAIN_3MF = '.3mf'
 DEFAULT_OUTPUT_DIR = '../output/inserts'
@@ -59,13 +62,14 @@ class InsertFactory():
         if self.gender == 'S':
             self.root_document = SOCKET_INSERT_DOCUMENT
 
-    def generate_insert(self, arrangement_config: Iterable[Path]):
+    def generate_insert(self, arrangement_config: Iterable[Path], format:str|Iterable[str]):
         """Generate inserts from a list of dimension
-        definition files and export them as 3mf.
+        definition files and export them in the specified formats.
 
         Args:
             arrangement_config (Iterable[Path]): The paths
             to the dimension definition files. 
+            format (str | Iterable[str]): Format(s) to export geometry into.
         """
         arrangement_csv = self.dimensions_dir / arrangement_config
         shell_size, contact_positions = self.parse_arrangement_csv(arrangement_csv)
@@ -84,7 +88,7 @@ class InsertFactory():
             contact_tools.append(current_contact_tool)
         
         self.create_contact_cutouts(insert_body, contact_tools)
-        self.export_insert(insert_body, insert_identifier)
+        self.export_insert(insert_body, insert_identifier, format)
 
     def parse_arrangement_csv(self,csv_filename:Path)->tuple[str, np.array]:
         """Parse an arrangement dimension csv. Get the
@@ -242,9 +246,9 @@ class InsertFactory():
         insert_name = str(arrangement_name).split('_')[0]
         return insert_name
     
-    def export_insert(self, insert_body, insert_identifier:str):
+    def export_insert(self, insert_body, insert_identifier:str, format:str | list[str]):
         """Recomputes the document and then exports the
-        specified body to 3mf under the insert identifier
+        specified body to specified format under the insert identifier
         name. The file is written to a subfolder specified
         by the gender of the insert. 
 
@@ -253,29 +257,40 @@ class InsertFactory():
             containing the geometry to be exported
             insert_identifier (str): The identifier of the
             exported body
+            format (str | list[str]): formats to export to
         """
         tqdm.write(f"Exporting insert {insert_identifier + self.gender}...")
+        supported_formats = ['3mf', 'step']
+        if type(format) == str:
+            format = [format]
+
+        if not set(format).issubset(supported_formats):
+            raise ValueError(f'{format} is not a supported format. Supported formats: {supported_formats}')
         self.root_document.recompute()
         shell_size = insert_identifier.split('-')[0]
         mil_shell_size = CIVIL_TO_MIL_SHELL_SIZES[shell_size]
         export_directory = self.output_dir / mil_shell_size
         if not export_directory.exists():
             export_directory.mkdir()
-        export_path = export_directory / (insert_identifier + self.gender + DOMAIN_3MF)
-        export_path = str(export_path)
-        if hasattr(Mesh, "exportOptions"):
-            options = Mesh.exportOptions(export_path)
-            Mesh.export([insert_body], export_path, options)
-        else:
-            Mesh.export([insert_body], export_path)
+
+        for format_instance in format: 
+            path = export_directory / (insert_identifier + self.gender + '.' + format_instance)
+            export_path = str(path)
+            
+            if hasattr(EXPORTERS[path.suffix], "exportOptions"):
+                options = EXPORTERS[path.suffix].exportOptions(export_path)
+                EXPORTERS[path.suffix].export([insert_body], export_path, options)
+            else:
+                EXPORTERS[path.suffix].export([insert_body], export_path)
         
 
 def main():
     pin_insert_factory = InsertFactory('P')
     socket_insert_factory = InsertFactory('S')
+    formats = ['3mf', 'step']
     for arrangement in tqdm(ARRANGEMENT_CONFIGURATIONS, desc='Generating inserts...', position=0):
-        pin_insert_factory.generate_insert(arrangement)
-        socket_insert_factory.generate_insert(arrangement)
+        pin_insert_factory.generate_insert(arrangement, formats)
+        socket_insert_factory.generate_insert(arrangement, formats)
 
 
 

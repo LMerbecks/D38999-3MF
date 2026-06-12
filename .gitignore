@@ -42,6 +42,7 @@ fp-info-cache
 # FreeCAD 
 **/*.FCBak
 **/*.3mf
+**/*.step
 
 **/__pycache__/*
 

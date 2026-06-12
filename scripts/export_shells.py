@@ -1,10 +1,13 @@
 import FreeCAD
 import Mesh
+import Import
 import os
 import time
 
 from tqdm import tqdm
 from dataclasses import dataclass
+from pathlib import Path
+
 
 
 @dataclass
@@ -22,7 +25,9 @@ SHELL_SIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
 
 KEYING_OPTIONS = ['N', 'A', 'B', 'C', 'D', 'E']
 
+EXPORTERS = {'.3mf': Mesh, '.step': Import}
 
+STEP_EXPORT_OPTIONS = {'exportHidden': True, 'keepPlacement': False, 'legacy': False}
 
 plug_config = ShellConfig(file="../models/D38999-26AXXXXX.FCStd",
                          document_name="D38999_26AXXXXX",
@@ -56,7 +61,7 @@ def export_shells(config: ShellConfig)->None:
     for shell_size in tqdm(config.shell_sizes, desc=f'Exporting shell sizes',position=0):
         current_output_directory = setup_output_directory(config.output_path_root, shell_size)
         for keying in tqdm(config.keying_options, desc=f'Exporting keying options',position=1, leave=False):
-            export3mf(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size)
+            export_as(shell_document, config, current_output_directory, keying=keying, shell_size=shell_size, format=['3mf', 'step'])
 
 
 def setup_output_directory(output_path_root:str, shell_size:str)->str:
@@ -75,20 +80,25 @@ def setup_output_directory(output_path_root:str, shell_size:str)->str:
         os.makedirs(current_output_directory)
     return current_output_directory
 
-def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:str, shell_size:str) -> None:
-    """Exports a 3mf file of a plug with the specified shell
-    size and keying.
+def export_as(shell_document, config:ShellConfig, output_directory:str, keying:str, shell_size:str, format:str|list[str]) -> None:
+    """Exports the connector in the shell document with the specified configuration in the provided format.
 
     Args:
         output_dir (str): The directory path to write the
         3mf file to. Without trailing /
         keying (str): keying option
         shell_size (str): shell size option
+        format (str): format to import into (3mf or step). Specify as list to import into different formats. 
 
     Raises:
         ValueError: If keying option is unknown
         ValueError: If shell size option is unknown
     """
+    supported_formats = ['3mf', 'step']
+    if type(format) == str: 
+        format = [format]
+    if not set(format_instance).issubset(supported_formats):
+        raise ValueError(f'{format} not supported! Supported formats: {supported_formats}')
     shell_part = shell_document.getObjectsByLabel(config.part_label)
     if len(shell_part) > 1:
         raise ValueError(f"Multiple parts with label: {config.part_label}")
@@ -99,8 +109,9 @@ def export3mf(shell_document, config:ShellConfig, output_directory:str, keying:s
     shell_document.recompute()
 
     objects = gather_bodies(shell_document, config.body_labels)
-    export_path = output_directory + "/" + config.output_file_template.format(size=shell_size, keying=keying) + '.3mf'
-    export_bodies(objects, export_path)
+    for format_instance in format:
+        export_path = output_directory + "/" + config.output_file_template.format(size=shell_size, keying=keying) + '.' + format_instance
+        export_bodies(objects, export_path)
 
 
 def set_shell_options(shell_part, keying, shell_size):
@@ -189,11 +200,14 @@ def export_bodies(objects:list[object], export_path:str)->None:
         export_path (str): Path to export to. File extension
         determines output format.
     """
-    if hasattr(Mesh, "exportOptions"):
-        options = Mesh.exportOptions(export_path)
-        Mesh.export(objects, export_path, options)
+    path = Path(export_path)
+    format = path.suffix
+    exporter = EXPORTERS[format]
+    if hasattr(exporter, "exportOptions"):
+        options = exporter.exportOptions(export_path)
+        exporter.export(objects, export_path, options)
     else:
-        Mesh.export(objects, export_path)
+        exporter.export(objects, export_path)
 
 def main():
     tqdm.write("Exporting plugs. This may take a while...")
